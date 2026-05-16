@@ -56,7 +56,7 @@ If the user invokes the skill in a directory that is clearly not a case folder (
 3. **Populate every field in the template.** For each placeholder of the form `[…]`:
    - Fill it from the Office Action where the answer is on the document.
    - If the answer must be supplied by the attorney or client (e.g., docket reference, internal notes), leave a clearly marked placeholder: `[TBD: <what the attorney needs to confirm>]`.
-   - If the answer requires a date computation (e.g., notional receipt under R. 126(2) EPC, response deadline), perform it and show your working in a brief footnote.
+   - If the answer requires a date computation (response deadline, R. 132 EPC extension cap, R. 135 EPC further-processing window, R. 116 EPC final date for written submissions, Art. 108 EPC appeal periods, …), **delegate to the `compute-time-limit` skill** — do not derive the date from memory and do not apply the obsolete pre-November-2023 10-day notification fiction. Apply that skill's workflow (anchor under R. 126(2) / R. 127(2) EPC as in force from 1 November 2023 = date the document bears; R. 131 EPC same-number rule for the period set by the OA; R. 134(1) EPC closed-day check at the end) and reproduce the resulting date together with the legal-basis trail in a short footnote to the relevant field of the template.
 4. **Quote verbatim** any examiner wording that the attorney will need to address directly (objection wording, claim feature mapping, etc.).
 5. **Do not invent prior art** or facts not present in the Office Action.
 
