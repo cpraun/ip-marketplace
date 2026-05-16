@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "praun-local",
+  "description": "Local plugins under development by praun.",
+  "owner": {
+    "name": "praun",
+    "type": "individual"
+  },       
+  "plugins": [
+    {
+      "name": "cp",
+      "description": "Assistant tools for European patent attorneys: Office Action analysis, response-strategy drafting, document drafting from templates, and EPO examiner simulation.",
+      "version": "0.1.0",
+      "source": "./",
+      "category": "domain"
+    }
+  ]
+}
