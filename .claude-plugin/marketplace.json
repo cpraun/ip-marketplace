@@ -10,7 +10,7 @@
     {
       "name": "epc-skills",
       "description": "EPC Skills — Assistant tools for European patent attorneys: Office Action analysis, response-strategy drafting, document drafting from templates, and EPO examiner simulation.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "./plugins/epc-skills",
       "category": "domain"
     }
