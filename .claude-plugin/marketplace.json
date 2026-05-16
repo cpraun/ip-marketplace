@@ -1,17 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "praun-local",
-  "description": "Local plugins under development by praun.",
+  "name": "ip-marketplace",
+  "description": "Marketplace for patent-related skills.",
   "owner": {
-    "name": "praun",
+    "name": "Christoph von Praun",
     "type": "individual"
   },       
   "plugins": [
     {
-      "name": "cp",
+      "name": "epc-skills",
       "description": "Assistant tools for European patent attorneys: Office Action analysis, response-strategy drafting, document drafting from templates, and EPO examiner simulation.",
       "version": "0.1.0",
-      "source": "./",
+      "source": "./plugins/epc-skills",
       "category": "domain"
     }
   ]
