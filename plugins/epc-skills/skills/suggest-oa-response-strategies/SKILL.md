@@ -91,17 +91,45 @@ The user is a patent attorney — they would rather hear a confident "I cannot t
 
 ## Method
 
-### Phase 1 — Objection summary
+### Specialized ground-specific skills — load before Phase 1
 
-Briefly summarize each Examiner objection. For each objection, assess its merit objectively as **Strong / Weak / Subjective** with a one-line reason and verify whether the Examiner's findings as expressed in the OA are in fact correct against the Application under Examination and the cited D-documents.
+This skill's strength is the curated Panel-of-Experts strategy. Its accuracy on each individual objection depends on applying the right substantive legal standard for the ground the Examiner raised. Before scoring an objection in Phase 1, and again whenever a candidate amendment in Phases 2–3 is checked against the same grounds, **consult the corresponding ground-specific skill in this plugin** and apply its standard precisely. Do not paraphrase the standards from memory — the specialized skills exist to keep the analysis EPO-faithful.
 
-Keep the assessment of merit **separate** from any recommendation. The user must be able to read "the Examiner is right on objection 2" without that being mixed up with "and here is what we should do about it".
+| Examiner's ground | Specialized skill to consult | Standard the skill encodes |
+|---|---|---|
+| Art. 54 EPC (novelty) | `check-art-54-epc` | Direct and unambiguous disclosure; no mosaicking; G 2/88 claim interpretation; T 261/15 sub-range / selection test; feature-by-feature decomposition. |
+| Art. 56 EPC (inventive step) | *(no dedicated skill — apply the problem–solution approach directly, see Phase 3)* | Guidelines G-VII, 5: CPA / DF / OTP / could-would; T-decisions on hindsight, pointer, plausibility of the technical effect. |
+| Art. 83 EPC (sufficiency) | `check-art-83-epc` | Whole-scope sufficiency (T 409/91, T 1063/06); undue burden (T 435/91); G 2/21 plausibility for technical-effect claims. |
+| Art. 84 EPC (clarity, conciseness, support) | `check-art-84-epc` | Guidelines F-IV taxonomy (relative terms, optional features, result-to-be-achieved, parameters, functional features, mixed category, missing essential features, Rule 43(2) conciseness); T 1845/14. |
+| Art. 123(2) EPC (added matter) | `check-art-123-2-epc` | Gold Standard (G 2/10, G 1/16); intermediate-generalisation test (T 201/83); multiple-selection test (T 727/00, T 686/99); range tests (T 2/81, T 1170/02); disclaimers (G 2/10 vs G 1/03 / G 2/03). |
+| Art. 76(1) EPC (divisional basis) | `check-art-76-1-epc` | Gold Standard applied to the parent **as filed** (G 1/05, G 1/06); chain-divisional requirement. |
+
+**How to consult.** Read each relevant `SKILL.md` (and any bundled assets) before doing the merit analysis for its ground. Apply the standard as the specialized skill prescribes — feature decomposition for Art. 54, the F-IV taxonomy for Art. 84, the Gold Standard for Art. 123(2), whole-scope enablement for Art. 83, parent-as-filed basis for Art. 76(1). Cite the specialized skill's standard or the underlying decision (G 2/10, T 201/83, …) where the call is not obvious; do not let a Strong / Weak / Subjective verdict stand without a rule-grounded one-line justification.
+
+**Why this matters.** The Strategic Analysis Report is what the attorney files decisions against. An objection that "looks weak" because of an unfamiliar feature can be Strong under careful feature-by-feature mapping; an Art. 123(2) objection that "looks fixable" by a description-sourced amendment can flip on a proper intermediate-generalisation test. The specialized skills exist to catch exactly these calls.
+
+**One coherent report.** The specialized skills are tools used internally — do not produce a parallel deliverable per ground, do not narrate the consultation to the user, and do not switch register. The Strategic Analysis Report remains a single, curated document in the persona of the Lead European Patent Strategist.
+
+### Phase 1 — Objection summary and merit assessment
+
+Briefly summarize each Examiner objection. For each objection, **first load the relevant specialized skill from the table above and apply its standard** to the Examiner's reasoning; only then score the merit as **Strong / Weak / Subjective** with a one-line, rule-grounded reason. The verdict reflects the specialized standard — not an intuitive read.
+
+- **Novelty (Art. 54)** — apply `check-art-54-epc`'s feature decomposition to the (claim, D-document) pair the Examiner relied on. *Strong* if every feature is directly and unambiguously disclosed in the cited passages; *Weak* if at least one feature is missing, or if the Examiner mosaicked across embodiments of D1; *Subjective* only where claim interpretation under G 2/88 is genuinely contested.
+- **Inventive step (Art. 56)** — walk the Examiner's problem–solution chain explicitly (CPA / DF / OTP / could-would). *Strong* if all four steps hold against the application under examination; *Weak* if the CPA is wrong, the DF is mischaracterised, the OTP is formulated with hindsight, or no pointer in the prior art motivates the combination.
+- **Sufficiency (Art. 83)** — apply `check-art-83-epc`. *Strong* if the disclosure plainly does not enable the claim across its whole scope; *Subjective* if the matter turns on G 2/21 plausibility from the application as filed.
+- **Clarity (Art. 84)** — apply `check-art-84-epc`'s F-IV taxonomy. *Strong* if the defect falls into a textbook category (relative term without precise reference, parameter without measurement method, mixed category, missing essential feature); *Weak* if the term is well-recognised in the art or clearly defined in the claim itself.
+- **Added matter (Art. 123(2))** — apply `check-art-123-2-epc` and the Gold Standard. *Strong* if no direct and unambiguous basis exists in the application as filed; *Weak* if the alleged basis can be cited verbatim and the combination as claimed is disclosed as a coherent unit; *Subjective* where the amendment is an intermediate generalisation that requires the functional-inseparability test.
+- **Divisional basis (Art. 76(1))** — apply `check-art-76-1-epc` against the parent as filed.
+
+Keep the assessment of merit **separate** from any recommendation. The user must be able to read "the Examiner is right on objection 2" without that being mixed up with "and here is what we should do about it". The specialized-skill consultation in this Phase 1 is the foundation on which Phases 2 and 3 rest — get it right.
 
 ### Phase 2 — Clarity recommendations (Art. 84 EPC)
 
-For each clarity objection, propose amendments that traverse the objection by importing **explicit clarifying statements found in the Description** (literal text, with citation). If the alleged ambiguity does not exist when the claim is read with a mind willing to understand, prefer an argumentation-only response and quote the supporting passage.
+For each clarity objection, apply the F-IV taxonomy from `check-art-84-epc` (see the table above) and propose amendments that traverse the objection by importing **explicit clarifying statements found in the Description** (literal text, with citation). If the alleged ambiguity does not exist when the claim is read with a mind willing to understand, prefer an argumentation-only response and quote the supporting passage.
 
-If the Office Action contains *only* clarity objections and the user wants a deep-dive into clarity, redirect to the `clarity-assessment-epc` skill.
+Before any amendment is added to a candidate route, re-run `check-art-84-epc` mentally on the *amended* claim wording — an imported parameter without a measurement method, or a "preferably" carried over from a dependent claim, will create a new Art. 84 problem and must be flagged or revised.
+
+If the Office Action contains *only* clarity objections and the user wants a deep-dive into clarity, redirect to `check-art-84-epc` directly.
 
 ### Phase 3 — Inventive step / novelty simulation (Art. 54/56 EPC) — Panel of Experts
 
@@ -113,7 +141,7 @@ For **every** strategy considered, apply the problem–solution approach (Guidel
 - **Distinguishing Feature (DF)** — sourced **from the Claims or Description of the Application under Examination, never from any D-document**.
 - **Technical Character & Advantage** — the technical effect, derived using only the Application under Examination.
 - **Objective Technical Problem (OTP)** — formulated from the technical effect. Avoid hindsight in the formulation.
-- **Art. 123(2) EPC compliance** — confirm the amendment does not extend beyond the content of the Application as filed; cite the literal basis (page/line, paragraph, claim number, figure).
+- **Art. 123(2) EPC compliance** — confirm the amendment does not extend beyond the content of the Application as filed by applying `check-art-123-2-epc`'s Gold Standard (G 2/10, G 1/16). Cite the literal basis (page/line, paragraph, claim number, figure). For description-sourced amendments, run the intermediate-generalisation test (T 201/83): is the retained feature disclosed at the claimed level of generality, or only embedded in a specific embodiment with surrounding features that are now omitted? For amendments that pick one element each from two or more lists in the description, run the multiple-selection test (T 727/00, T 686/99). For range amendments, apply T 2/81 / T 1170/02.
 
 #### Execution
 
@@ -124,10 +152,12 @@ For **every** strategy considered, apply the problem–solution approach (Guidel
 
 For each objection, also evaluate:
 
-- **Argumentation only** — typical attack lines:
+- **Argumentation only** — typical attack lines (in each case, ground the argument in the standard of the corresponding specialized skill — see the table at the top of Method):
   - *Art. 56*: wrong CPA, mischaracterised DF, wrongly formulated OTP, hindsight reconstruction, missing technical effect, lack of pointer / motivation in the prior art.
-  - *Art. 54*: feature not actually disclosed in the cited passage; implicit disclosure not directly and unambiguously derivable; mosaicking across embodiments of D1.
-  - *Art. 84*: claim read with a mind willing to understand; term has well-recognised meaning in the art.
+  - *Art. 54* (via `check-art-54-epc`): feature not actually disclosed in the cited passage; implicit disclosure not directly and unambiguously derivable; mosaicking across embodiments of D1; sub-range / selection sufficiently far removed from disclosed examples (T 261/15).
+  - *Art. 84* (via `check-art-84-epc`): claim read with a mind willing to understand; term has well-recognised meaning in the art; parameter measurable by a method known to the skilled person.
+  - *Art. 83* (via `check-art-83-epc`): the alleged enablement gap is filled by common general knowledge or by the worked examples; G 2/21 plausibility is satisfied by the application as filed.
+  - *Art. 123(2)* (via `check-art-123-2-epc`): the basis can be cited verbatim and as a coherent unit; the amendment is not an intermediate generalisation under the functional-inseparability test.
 - **Auxiliary requests** — fall-back positions ordered from broadest to narrowest. Each auxiliary request must itself satisfy Art. 123(2), Art. 84, and avoid introducing new prior-art problems.
 - **Procedural** — request for oral proceedings (Art. 116 EPC), examiner interview, further processing (Art. 121 EPC) where a period has been missed, divisional (Art. 76 EPC) for unprosecuted subject-matter, request for postponement of oral proceedings only on the grounds listed in the Notice from the EPO.
 
@@ -142,11 +172,13 @@ Recommend a primary line plus one or two auxiliary requests, ordered from broade
 
 ## Cross-cutting checks (perform before finalizing)
 
-Before delivering, run through this checklist. If any item fails, fix it or flag it explicitly in the output.
+Before delivering, run through this checklist. If any item fails, fix it or flag it explicitly in the output. Each check that has a specialized skill above is performed against that skill's standard — not from memory.
 
-- Every proposed amendment has explicit literal basis in the application as filed (Art. 123(2) EPC). Mark any that cannot be verified.
+- Every proposed amendment has explicit literal basis in the application as filed (Art. 123(2) EPC) — verified using `check-art-123-2-epc`'s Gold Standard, including the intermediate-generalisation test for description-sourced features and the multiple-selection test for picks from disclosure lists. Mark any amendment whose basis cannot be verified.
 - Inventive-step argumentation is built on the problem–solution approach (Guidelines G-VII, 5), not on intuitive "this is more inventive than that" reasoning.
-- Clarity (Art. 84 EPC) is preserved by every amendment — adding a feature must not introduce a new clarity defect.
+- Clarity (Art. 84 EPC) is preserved by every amendment — adding a feature must not introduce a new clarity defect; re-run `check-art-84-epc` mentally on the amended claim wording.
+- Sufficiency (Art. 83 EPC) is preserved by every amendment — narrowing to a parameter range, a functional feature, or a specific embodiment must not break whole-scope enablement; re-check via `check-art-83-epc`.
+- Where the case is a divisional, every amendment also has basis in the parent as filed — verified via `check-art-76-1-epc`.
 - Dependent claims remain properly supported by any amended independent claim, and the dependency chain still makes technical sense.
 - No amendment introduces a feature lacking corresponding support in the description (Art. 84, second sentence — support requirement).
 - Where the OA cites multiple documents, the chosen amendment is robust against *all* relevant combinations, not only against the one the Examiner used.
@@ -202,8 +234,10 @@ Only carry forward actionable recommendations whose likelihood of success exceed
 
 Before handing the report to the attorney, ask yourself:
 
+- For every objection scored as Strong / Weak / Subjective in Phase 1, did I actually consult the corresponding specialized skill (`check-art-54-epc`, `check-art-83-epc`, `check-art-84-epc`, `check-art-123-2-epc`, `check-art-76-1-epc`) and ground the verdict in its standard — feature decomposition for Art. 54, F-IV taxonomy for Art. 84, Gold Standard for Art. 123(2), whole-scope enablement for Art. 83, parent-as-filed basis for Art. 76(1)?
 - Have I separated the *assessment* of each objection from the *recommendation*? An attorney reading this should not have to disentangle "is the Examiner right?" from "what should we do?".
-- Is every amendment route grounded in literal text from the application as filed, with a citation?
+- Is every amendment route grounded in literal text from the application as filed, with a citation, and has its Art. 123(2) basis been verified against `check-art-123-2-epc`'s Gold Standard (including the intermediate-generalisation test where applicable)?
+- Did I re-run `check-art-84-epc` mentally on each *amended* claim to catch new clarity defects introduced by the amendment, and `check-art-83-epc` for any newly narrowed range or imported functional feature?
 - Have I avoided arguing inventive step by intuition rather than by the problem–solution approach?
 - Have I curated, not enumerated? If the report has fifteen amendment routes listed, the Panel-of-Experts simulation has not done its job.
 - Have I named the deadlines and procedural decisions only the attorney can take?
