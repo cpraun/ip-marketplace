@@ -1,5 +1,5 @@
 {
-  "name": "epc-skills",
+  "name": "EPC Skills",
   "version": "0.1.0",
   "description": "Assistant tools for European patent attorneys: Office Action analysis, response-strategy drafting, document drafting from templates, and EPO examiner simulation.",
   "author": { "name": "Christoph von Praun" },
