@@ -1,5 +1,5 @@
 ---
-name: translation-check-en-de
+name: verify-en-de-translation
 description: Verify the quality of an English-to-German translation by comparing the English source text against the German target text and reporting only the errors found. The skill performs two strict checks (1) terminology consistency — flag every English term that is rendered by two or more different German equivalents within the same translation; (2) completeness — flag every English paragraph that has no corresponding German paragraph. The output is a defect-only report; Do NOT use this skill for stylistic rewriting of a translation; producing a new translation from scratch (this is a checking skill, not a translation skill); language pairs other than English→German (use a different skill or general translation tooling for EN-FR, DE-EN reverse direction, etc.); detecting subtle nuance, register, or tone errors that go beyond term-level consistency; or substantive legal/technical review of the translated content.
 ---
 
@@ -29,12 +29,32 @@ The skill is therefore conservative: it flags every candidate inconsistency, eve
 
 If the user wants any of the above, say so briefly and either redirect or, if the user confirms they want a different task, drop this skill and switch to the right one.
 
+### Out-of-scope handling
+
+This skill is **single-purpose**. It performs an EN → DE terminology-consistency and completeness check and nothing else. If, while running or in follow-up, the user asks for any of the following, do NOT silently extend scope. Instead, deliver the defect report first, then state clearly that the request is outside this skill's scope:
+
+- **Producing a translation from scratch** — out of scope. This is a checking skill, not a translation skill.
+- **Stylistic rewriting / editing** — out of scope. "This German sentence sounds clunky" is not a finding.
+- **Grammar correction** — out of scope unless the grammar error is also a consistency or completeness problem.
+- **Other language pairs** — out of scope. Only EN → DE. For French targets (DE → FR, EN → FR), reverse-direction checks (DE → EN), or other pairs, stop and tell the user this command is EN → DE only.
+- **Back-translation comparison** — out of scope. The skill compares EN against DE directly; it does not translate the German back to English to compare.
+- **Substantive legal/technical review** — out of scope. A wrong-but-consistent translation will not be flagged here. The skill checks internal consistency and completeness, not correctness of translation choices.
+- **Number / unit mismatches** — out of strict scope, but if obviously spotted, the skill mentions them under Notes.
+
+For each out-of-scope request, the response is a single sentence: *"That is outside the scope of /verify-en-de-translation. To do [X], please use [the appropriate other tool] or run a separate request."* Do not silently perform the out-of-scope task.
+
 ## Inputs to gather
 
 The skill needs two text inputs:
 
 - **English source** — the file or text containing the original English. Filename conventions to look for, case-insensitive: contains `english`, `EN`, `_en`, `-en`, or `source`.
 - **German target** — the file or text containing the German translation. Filename conventions to look for: contains `german`, `deutsch`, `DE`, `_de`, `-de`, or `target`.
+
+Sources, in order of preference:
+
+1. Explicit paths or pasted text supplied by the user — used directly.
+2. Project-directory discovery — Glob the current directory by the conventions above.
+3. Files attached to the conversation — read them directly.
 
 If files are attached or a folder is mounted, search for these conventions. If two files are provided without obvious naming, look at the content: the English file is the one in English. If the user pastes both texts inline, use them as supplied.
 
@@ -50,6 +70,12 @@ If a non-German target is supplied (French, Spanish, Italian, …), tell the use
 - HTML / XML — extract the visible text, ignoring tags.
 
 The pair must be in the *same* logical structure (same section ordering, same headings). If the German file is reorganised (e.g., chapters in a different order), say so and ask whether the user wants the comparison anyway.
+
+### Prompts for missing inputs
+
+If only one of the two files is available, stop and ask for the other. Do not try to guess what the missing side says.
+
+If two files are provided without obvious naming, the skill identifies the English file by content. If the user pastes both texts inline, the skill uses them as supplied.
 
 ## Method
 
@@ -162,6 +188,15 @@ No errors found.
 - **Boilerplate cut on the German side** — sometimes the translator legitimately omits standard boilerplate that the German reader has elsewhere. Still flag it as a missing paragraph; the reviewer decides.
 - **Bilingual sections / quotes** — if the English source contains a German quote that is left in German also in the target, that is normal and not a finding.
 
+## Error handling
+
+- **Only one of the two files provided**: stop and ask for the other. Do not guess content.
+- **German target is in a different language** (French, Spanish, Italian, …): stop and tell the user this command is EN → DE only.
+- **English and German files have different logical structure** (chapters reordered, headings renumbered): the skill says so and asks whether the user wants the comparison anyway.
+- **PDF extraction produced scrambled paragraph boundaries**: the skill proceeds against the reflowed text and flags the limitation under Notes.
+- **No findings at all**: output exactly `No errors found.` per the skill's format.
+- **Extra content on the German side with no English counterpart**: not in the standard output; the skill mentions it under Notes if it appears substantive.
+
 ## Self-check before delivering
 
 Before handing the report to the reviewer:
@@ -173,3 +208,11 @@ Before handing the report to the reviewer:
 - If everything is clean, does the report consist exactly of `No errors found.` and nothing else?
 
 If any of these is "no", revise before delivering.
+
+## Notes for the assistant
+
+- Do not narrate this skill file to the user. Just do the work.
+- The skill is conservative: it flags every candidate inconsistency, even where a human reader might say "well, both renderings are obviously fine here". Decisions about whether a flagged inconsistency is acceptable belong to the reviewer, not to this skill.
+- Defined terms (capitalised throughout, in quotes, or introduced with an explicit definition) are treated more strictly than ordinary terms — every rendering must be identical.
+- Claim language in patent texts is highly sensitive — treat every noun phrase in a claim as a defined term.
+- If after delivery the user asks substantive follow-up questions about the findings themselves (e.g., "why did you flag 'control unit' but not 'sensor'?"), answer them — that is part of the same scope. Only refuse extensions to other tasks.

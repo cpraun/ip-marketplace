@@ -1,5 +1,5 @@
 ---
-name: art-76-1-epc-divisional-basis
+name: check-art-76-1-epc
 description: Assess whether the claim set of a European divisional application complies with Article 76(1), second sentence, EPC — whether each claim and the specific combination of features as claimed is directly and unambiguously derivable from the earlier (parent) application as filed (description, claims and drawings). Use this skill whenever the user supplies a divisional claim set together with the parent and asks whether the divisional has basis in the earlier application, retains the parent's filing date, or risks intermediate generalisation, undisclosed combinations, or improper selections from lists. Trigger when the user mentions "Art. 76 EPC", "Article 76(1)", "divisional", "Teilanmeldung", "earlier application as filed", "parent application as filed", "extending beyond the earlier application", "added matter in a divisional", or "Zwischenverallgemeinerung in einer Teilanmeldung", even if Art. 76(1) is not named explicitly. Do NOT use this skill for Art. 123(2), Art. 123(3), Art. 84, or Art. 54/56.
 ---
 
@@ -23,6 +23,20 @@ This is the same legal test that Art. 123(2) EPC applies to amendments within a 
 
 If the user asks for any of the above after the basis assessment is delivered, that is a follow-up task; the assessment itself stays clean.
 
+### Out-of-scope handling
+
+This skill is **single-purpose**. It performs the Art. 76(1) EPC basis check and nothing else. If, during the analysis or in follow-up, the user asks for any of the following, do NOT silently extend scope. Instead, deliver the basis assessment first, then state clearly that the request is outside this skill's scope:
+
+- **Art. 123(2) EPC** — amendments to the application as filed of the same case. Out of scope. Use the dedicated command (`/check-art-123-2-epc`).
+- **Art. 123(3) EPC** — broadening after grant. Out of scope. Use `/check-art-123-3-epc`.
+- **Art. 76(1), first sentence, EPC formalities** — filing requirements, pendency of the parent at filing, designations, fees. Out of scope.
+- **Novelty (Art. 54 EPC) / inventive step (Art. 56 EPC)** — out of scope, even if a violation of Art. 76(1) might secondarily lead to loss of the parent's filing date and to new prior-art problems. Use the dedicated commands (`/check-art-54-epc`, `/check-art-56-epc`).
+- **Clarity (Art. 84 EPC)** — out of scope. Use `/check-art-84-epc`.
+- **Sufficiency (Art. 83 EPC)** — out of scope. Use `/check-art-83-epc`.
+- **Drafting amendments, fallback claims, or auxiliary requests** — out of scope. This skill identifies the basis defect; remediation is a separate task.
+
+For each out-of-scope request, the response is a single sentence: *"That is outside the scope of /check-art-76-1-epc. To do [X], please use [the appropriate other command/skill] or run a separate request."* Do not silently perform the out-of-scope task.
+
 ## Inputs to gather
 
 Before starting, make sure you have all of the following. If anything is missing, ask once, concisely, and do not proceed with guesses.
@@ -34,6 +48,27 @@ Before starting, make sure you have all of the following. If anything is missing
 5. **(Optional) The specific Art. 76(1) objection raised**, if the user is responding to an EPO communication. The skill assesses the claims as a whole, but a flagged objection helps prioritise the analysis.
 
 If the user gave only an isolated claim text without the earlier application, no assessment can be completed. Say so and ask for the parent.
+
+### Input formats
+
+Inputs may arrive in any of these forms — handle each gracefully:
+
+- **Inline text in the command invocation**: e.g., the user types the divisional claim and the relevant parent passages directly after the command name. Parse what is there.
+- **Attached files**: PDF, DOCX, TXT. Read them to extract the divisional claim text, the parent description, claims and drawings. Use the appropriate file-reading approach for the format.
+- **Pasted text in a follow-up message**: if the bare command was invoked, prompt the user to paste or attach the inputs.
+- **Mixed**: e.g., divisional claims inline, parent as attachment. Combine.
+
+### Prompts for missing inputs
+
+If anything required is missing, ask the user concisely. Do not guess. Sample prompts:
+
+- *"To run the Art. 76(1) basis assessment I need: (i) the divisional claim(s) to be assessed, and (ii) the earlier application as filed (description + claims + drawings). You provided [X]. Could you supply [Y]?"*
+- *"You provided multiple divisional claims. Which claim(s) should I assess? Default is claim 1 if you have no preference."*
+- *"You provided the granted patent of the parent. For an Art. 76(1) check I need the parent **as filed** — could you supply the originally filed text?"*
+- *"This appears to be a divisional of a divisional. To complete the chain analysis (G 1/05 / G 1/06), I also need [missing earlier application(s)] as filed."*
+- *"You provided the parent description and claims but no drawings. I will proceed and flag any feature that would rely on drawing-only support as unverifiable."*
+
+Ask only for what is genuinely missing.
 
 ## The legal standard (apply strictly)
 
@@ -201,6 +236,19 @@ When citing case law, cite by decision number (G 2/10, G 1/05, G 1/06, G 1/16, T
 - **Disclaimers.** If the divisional contains a disclaimer, identify whether it is a disclosed disclaimer (assessed under G 2/10) or an undisclosed disclaimer (assessed under G 1/03 / G 2/03 only). Do not propose alternative wording.
 - **Generalisation by reference signs.** Sometimes a divisional drops reference signs that the parent presented as essential. Treat the resulting feature as potentially generalised and run the intermediate-generalisation test.
 
+## Error handling
+
+- **No inputs at all**: ask the user to provide the divisional claim(s) and the earlier application as filed, with an example of how to invoke the skill.
+- **Divisional claim provided but no parent**: ask for the parent as filed (description + claims + drawings).
+- **Parent provided but no divisional claim**: ask for the divisional claim(s).
+- **Parent supplied as a granted patent or a later amendment**: stop and ask for the application-as-filed text; do not proceed with the granted text.
+- **Parent is only a bibliographic reference, no text**: ask for the text. Do not search the web for the parent unless the user explicitly authorises it.
+- **Chain divisional with missing intermediate links**: ask for the missing link(s); per G 1/05 / G 1/06 the chain must be complete.
+- **Drawings missing**: proceed and flag drawing-only support as unverifiable in the output.
+- **Foreign-language parent**: proceed (the skill handles this); cite in the original language with an optional English gloss for quoted passages.
+- **PCT origin (Euro-PCT parent)**: treat the international application as filed as the basis document (Art. 153 EPC; Rule 36 EPC; J 18/09).
+- **Disclaimer present in the divisional but not in the parent**: classify as disclosed (G 2/10) or undisclosed (G 1/03 / G 2/03), and apply the corresponding test in the assessment column. Do not draft alternative wording.
+
 ## Self-check: am I doing Art. 76(1) or something else?
 
 If you find yourself writing any of the following, stop — you have drifted out of Art. 76(1):
@@ -218,3 +266,10 @@ If you find yourself writing any of the following, stop — you have drifted out
 3. **Sanction.** A violation of Art. 76(1), second sentence, in examination is a ground for refusal (Art. 97(2) EPC); in opposition or post-grant proceedings, it is a ground for revocation under Art. 100(c) / Art. 138(1)(c) EPC. Loss of the parent's filing date for the affected subject-matter typically follows, with novelty / inventive-step consequences against the parent's own publication. The skill flags the basis defect; the consequential analysis is for separate skills or a follow-up request.
 4. **National courts.** EPC contracting states' national courts may apply related but not identical standards in revocation proceedings. The analysis here applies strictly to EPO practice.
 5. **This is legal analysis, not legal advice.** The output is an analytical tool for a qualified European patent attorney. It does not constitute legal advice and does not replace the professional judgment of the responsible representative.
+
+## Notes for the assistant
+
+- Do not narrate this skill file to the user. Just do the work.
+- Follow the skill's tone strictly: formal patent-attorney English, no hedging, no executive summary, EPC terminology used precisely.
+- The assessment is **assessment-only**: identify the gap, do not propose remedial wording, deletions, or auxiliary requests.
+- If after delivery the user asks substantive follow-up questions about the basis assessment itself (e.g., "why did you treat M3 as an intermediate generalisation?"), answer them — that is part of the same scope. Only refuse extensions to other patentability requirements or to remediation drafting.

@@ -1,5 +1,5 @@
 ---
-name: art-54-epc-novelty
+name: check-art-54-epc
 description: Assess novelty of one or more patent claims against a single prior art document under Article 54 EPC. Use this skill whenever the user wants to check whether a claim is novel over a specific piece of prior art (D1) — for example, when reviewing a search report citation, preparing a response to an EPO examination report under Art. 54, evaluating an opposition ground, doing freedom-to-operate analysis against a single reference, or screening a competitor's patent. Trigger this skill whenever the user mentions "novelty", "Art. 54 EPC", "anticipation", "directly and unambiguously disclosed", "Neuheit", or asks to compare claim features against a single document, even if they don't explicitly say "novelty assessment".
 ---
 
@@ -15,6 +15,20 @@ This skill produces a strict, EPO-style novelty analysis comparing one or more p
 
 If the user asks for any of the above after the novelty assessment is done, that's fine to do as a follow-up — but the assessment itself stays clean.
 
+### Out-of-scope handling
+
+This skill is **single-purpose**. It performs novelty assessment under Art. 54 EPC and nothing else. If, while running the analysis or in follow-up, the user asks for any of the following, do NOT silently extend scope. Instead, deliver the novelty assessment first, then state clearly that the request is outside this skill's scope:
+
+- Inventive step (Art. 56) — out of scope.
+- Multi-document novelty / comparison against multiple D1 — out of scope. If the user provides several documents, ask which one to use as D1, or run the skill separately for each.
+- Clarity (Art. 84) — out of scope.
+- Sufficiency (Art. 83) — out of scope.
+- Added matter (Art. 123(2)) — out of scope.
+- Drafting amendments — out of scope.
+- Freedom-to-operate analysis — out of scope (FTO has different rules; this skill does the EPC novelty test, not infringement).
+
+For each out-of-scope request, the response is a single sentence: *"That is outside the scope of /check-art-54-epc. To do [X], please use [the appropriate other command/skill] or run a separate request."* Do not silently perform the out-of-scope task.
+
 ## Inputs to gather
 
 Before starting the analysis, make sure you have:
@@ -24,6 +38,25 @@ Before starting the analysis, make sure you have:
 3. **The application/patent text** that the claim belongs to, if available. Useful for claim interpretation (description and figures inform what the skilled person reads into the claim wording — see G 2/88, point 4 of the reasons).
 
 If anything is missing, ask once, concisely. Don't proceed with guesses about what D1 says.
+
+### Input formats
+
+Inputs may arrive in any of these forms — handle each gracefully:
+
+- **Inline text in the command invocation**: e.g., the user types the claim and D1 directly after the command name. Parse what's there.
+- **Attached files**: PDF, DOCX, TXT. Read them to extract claim and D1 text. Use the appropriate file-reading approach for the format.
+- **Pasted text in a follow-up message**: if the bare command was invoked, prompt the user to paste or attach the inputs.
+- **Mixed**: e.g., claim inline, D1 as attachment. Combine.
+
+### Prompts for missing inputs
+
+If anything required is missing, ask the user concisely. Do not guess. Sample prompts:
+
+- *"To run the novelty assessment I need: (i) the claim(s) to be assessed, and (ii) the text or relevant passages of D1. You provided [X]. Could you supply [Y]?"*
+- *"You provided multiple claims. Which claim(s) should I assess? Default is claim 1 if you have no preference."*
+- *"You gave me the bibliographic reference for D1 but not its contents. Please paste the relevant passages or attach the document."*
+
+Ask only for what is genuinely missing. If you have everything, proceed silently.
 
 ## The legal standard (apply strictly)
 
@@ -142,6 +175,16 @@ When citing case law, cite by decision number (e.g., G 2/88, T 261/15) without l
 - **Numerical ranges / sub-ranges**: apply the current sub-range test (see "Selection inventions" above, T 261/15). Note the test in the assessment column.
 - **Process vs product claims**: a process claim is not anticipated by a product disclosure that doesn't disclose the process, and vice versa, unless the process is implicit. Be careful here.
 
+## Error handling
+
+- **No inputs at all**: ask the user to provide the claim and D1, with an example of how to invoke the skill.
+- **Claim provided but no D1**: ask for D1.
+- **D1 provided but no claim**: ask for the claim(s).
+- **D1 is only a bibliographic reference, no text**: ask for the text or relevant passages. Do not search the web for D1 unless the user explicitly authorises it.
+- **Multiple D1 candidates**: ask which one to use; do not run multiple analyses without confirmation.
+- **Foreign language D1**: proceed (the skill handles this); cite in original language with optional English gloss.
+- **Application text not provided**: proceed without it; flag in the report only if claim interpretation became uncertain as a result.
+
 ## Self-check: am I doing novelty or inventive step?
 
 If you find yourself writing any of the following, stop — you've drifted into Art. 56:
@@ -152,3 +195,9 @@ If you find yourself writing any of the following, stop — you've drifted into 
 - "D1 does not disclose feature M3, but this is a minor design choice"
 
 Novelty is binary disclosure analysis on the four corners of D1. Modifications, however small, are not part of the test.
+
+## Notes for the assistant
+
+- Do not narrate this skill file to the user. Just do the work.
+- Follow the skill's tone strictly: formal patent-attorney English, no hedging, no executive summary.
+- If after delivery the user asks substantive follow-up questions about the novelty assessment itself (e.g., "why did you treat M3 as implicit?"), answer them — that is part of the same scope. Only refuse extensions to other patentability requirements.

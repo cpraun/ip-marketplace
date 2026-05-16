@@ -1,5 +1,5 @@
 ---
-name: art-84-epc-clarity
+name: check-art-84-epc
 description: Assess clarity and conciseness of one or more patent claims under Article 84 EPC, based on the claim wording alone. Use this skill whenever the user wants to check whether a claim is clear and concise — for example, when reviewing a draft application before filing, preparing a response to an EPO examination report under Art. 84, screening a competitor's claims for vulnerabilities, evaluating amendments after opposition, or doing a pre-filing claim review. Trigger this skill whenever the user mentions "clarity", "Art. 84 EPC", "Klarheit", "indefinite", "ambiguous claim", "concise claims", or asks to review claim wording for defects, even if they don't explicitly say "clarity assessment". Do NOT use this skill for support objections (Art. 84, third requirement), sufficiency (Art. 83), added matter (Art. 123(2)), or novelty/inventive step.
 ---
 
@@ -17,6 +17,21 @@ This skill produces a strict, EPO-style review of one or more patent claims for 
 
 If the user asks for any of the above after the clarity assessment is done, that's fine to do as a follow-up — but the assessment itself stays clean.
 
+### Out-of-scope handling
+
+This skill is **single-purpose**. It performs clarity and conciseness assessment under Art. 84 EPC (second requirement) and nothing else. If, while running the analysis or in follow-up, the user asks for any of the following, do NOT silently extend scope. Instead, deliver the clarity assessment first, then state clearly that the request is outside this skill's scope:
+
+- **Support by the description (Art. 84 third requirement)** — out of scope. Requires the description.
+- **Sufficiency (Art. 83)** — out of scope. Use `/check-art-83-epc`.
+- **Added matter (Art. 123(2))** — out of scope. Use `/check-art-123-2-epc`. The skill notes Art. 123(2) caveats on suggested fixes but does not perform a full check.
+- **Novelty (Art. 54)** — out of scope. Use `/check-art-54-epc`.
+- **Inventive step (Art. 56)** — out of scope.
+- **Divisional basis (Art. 76(1))** — out of scope. Use `/check-art-76-1-epc`.
+- **Drafting amendments beyond the straightforward rewording fixes the skill produces** — out of scope.
+- **Scope-of-protection / infringement analysis under Art. 69** — out of scope. Art. 69 governs extent of protection of a granted patent and does not cure clarity defects under Art. 84.
+
+For each out-of-scope request, the response is a single sentence: *"That is outside the scope of /check-art-84-epc. To do [X], please use [the appropriate other command/skill] or run a separate request."* Do not silently perform the out-of-scope task.
+
 ## Inputs to gather
 
 Before starting the analysis, make sure you have:
@@ -24,8 +39,27 @@ Before starting the analysis, make sure you have:
 1. **The claim(s) to be assessed.** Process exactly the claims provided. If multiple claims are given, assess each individually and also look for cross-claim issues (inconsistencies between claims, redundant claims, unclear back-references).
 2. **The description and figures** (optional). Not used to find clarity defects, but the skilled person reads the claim in light of the description, so a defect that is resolved by the description may be a less serious clarity issue than one that is not. If the user provides the description, use it only to gauge severity, not to introduce or eliminate issues. The claim must be clear *on its own*: it is the wording of the claims that defines the protection, not the description (Art. 69 EPC and the established case law that Art. 69 governs scope of protection but does not cure unclear claims for the purposes of Art. 84 — see *Case Law of the Boards of Appeal*, II.A.6.3.).
 3. **Indication of any user-specific concerns.** If the user has a particular suspicion (e.g., "the term 'substantially' worries me"), address it explicitly — but do not limit the analysis to that.
+4. **Procedural context** (optional): examination, opposition, pre-filing review, amendment review. Note if provided — in particular, the G 3/14 limitation applies to clarity of granted, unamended claims in opposition.
 
 If only the claims are provided, that is sufficient. Do not block the analysis waiting for the description.
+
+### Input formats
+
+Inputs may arrive in any of these forms — handle each gracefully:
+
+- **Inline text in the command invocation**: e.g., the user types the claim directly after the command name. Parse what's there.
+- **Attached files**: PDF, DOCX, TXT. Read them to extract claim text. Use the appropriate file-reading approach for the format.
+- **Pasted text in a follow-up message**: if the bare command was invoked, prompt the user to paste or attach the claim(s).
+- **Mixed**: e.g., claim 1 inline, claims 2–10 as attachment. Combine.
+
+### Prompts for missing inputs
+
+If anything required is missing, ask the user concisely. Do not guess and do not invent claim text. Sample prompts:
+
+- *"To run the clarity assessment I need the claim(s) to be assessed. You provided [X]. Could you paste or attach the claim text?"*
+- *"You provided multiple claims. Which claim(s) should I assess? Default is all claims provided if you have no preference."*
+
+Do not ask for the description unless the user offers it — clarity is assessed on the claim wording alone. Ask only for what is genuinely missing.
 
 ## The legal standard (apply strictly)
 
@@ -179,6 +213,16 @@ Avoid hedging language ("arguably", "one might think") — the severity column c
 - **Functional language with `wherein` clauses**: `wherein` clauses are clear unless they introduce ambiguity about whether the wherein-feature is limiting or merely descriptive.
 - **Use claims**: ensure the use is to a defined entity for a defined purpose; "use of X for Y" is clear, "use of X" alone is not.
 
+## Error handling
+
+- **No inputs at all**: ask the user to provide the claim(s), with an example of how to invoke the skill.
+- **Bare bibliographic reference (e.g., publication number) but no claim text**: ask for the claim text. Do not search the web unless the user explicitly authorises it.
+- **Claims in a foreign language**: proceed (the skill handles this); work with the original wording and optionally provide a brief English gloss in the issue description.
+- **Granted, unamended claims in opposition**: proceed, but note the G 3/14 limitation in the "Procedural context" line — clarity of granted claims cannot be re-examined in opposition unless an amendment introduces a clarity defect.
+- **Amended claims**: proceed; flag any suggested fix that would risk Art. 123(2) added matter as a caveat in the fix column.
+- **Multiple claim sets provided**: ask which set to use; do not run multiple analyses without confirmation.
+- **Single claim only**: skip the cross-claim section or write "Not applicable — single claim".
+
 ## Self-check: am I doing clarity, or something else?
 
 If you find yourself writing any of the following, stop — you've drifted out of Art. 84 clarity:
@@ -190,3 +234,11 @@ If you find yourself writing any of the following, stop — you've drifted out o
 - "this feature was not in the original application" — that's added matter (Art. 123(2)), not clarity.
 
 Clarity is about whether the skilled person can determine the scope of protection from the claim wording. If you are reasoning about anything else — the prior art, the description, the original disclosure, or whether the invention works — you have drifted out of scope.
+
+## Notes for the assistant
+
+- Do not narrate this skill file to the user. Just do the work.
+- Follow the skill's tone strictly: formal patent-attorney English, no hedging, no executive summary.
+- Clarity is about whether the skilled person can determine the scope of protection from the claim wording. If you are reasoning about the prior art, the description's adequacy, the original disclosure, or whether the invention works, you have drifted out of scope.
+- Broad ≠ unclear. Do not mark a claim "High" severity merely because it is broad.
+- If after delivery the user asks substantive follow-up questions about the clarity assessment itself (e.g., "why did you treat 'substantially' as High rather than Medium here?"), answer them — that is part of the same scope. Only refuse extensions to other patentability requirements.

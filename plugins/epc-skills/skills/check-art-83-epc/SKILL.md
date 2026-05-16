@@ -1,5 +1,5 @@
 ---
-name: art-83-epc-sufficiency
+name: check-art-83-epc
 description: Assess sufficiency of disclosure of one or more patent claims under Article 83 EPC, based on the application as filed (claims and description, with figures optional). Use this skill whenever the user wants to check whether a claimed invention is disclosed in a manner sufficiently clear and complete for the skilled person to carry it out — for example, when reviewing a draft application before filing, preparing a response to an EPO examination report under Art. 83, evaluating an opposition ground under Art. 100(b) EPC, screening a competitor's patent for sufficiency vulnerabilities, or assessing whether a broad functional or parameter-based claim is enabled across its whole scope. Trigger this skill whenever the user mentions "sufficiency", "Art. 83 EPC", "enablement", "carry out the invention", "Ausführbarkeit", "undue burden", "whole-scope sufficiency", "plausibility" (G 2/21), or asks whether the description supports performing the invention. Do NOT use this skill for clarity (Art. 84), support (Art. 84 third requirement), added matter (Art. 123(2)), or novelty/inventive step.
 ---
 
@@ -18,6 +18,21 @@ This skill produces a strict, EPO-style sufficiency assessment of one or more pa
 
 If the user asks for any of the above after the sufficiency assessment is done, that's fine to do as a follow-up — but the assessment itself stays clean.
 
+### Out-of-scope handling
+
+This skill is **single-purpose**. It performs sufficiency-of-disclosure assessment under Art. 83 EPC and nothing else. If, while running the analysis or in follow-up, the user asks for any of the following, do NOT silently extend scope. Instead, deliver the sufficiency assessment first, then state clearly that the request is outside this skill's scope:
+
+- Clarity (Art. 84) — out of scope. Use `/check-art-84-epc` if available.
+- Support by the description (Art. 84 third requirement) — out of scope.
+- Novelty (Art. 54) — out of scope. Use `/check-art-54-epc` if available.
+- Inventive step (Art. 56) — out of scope.
+- Added matter (Art. 123(2)) — out of scope. The skill notes supporting passages for suggested fixes but does not perform a full Art. 123(2) analysis.
+- Industrial applicability (Art. 57) — out of scope.
+- Full plausibility analysis under G 2/21 across all subject-matter — only invoked where the claim involves a technical effect; do not turn the assessment into a G 2/21 treatise.
+- Drafting amendments beyond the straightforward restrictions to enabled subject-matter that the skill produces — out of scope.
+
+For each out-of-scope request, the response is a single sentence: *"That is outside the scope of /check-art-83-epc. To do [X], please use [the appropriate other command/skill] or run a separate request."* Do not silently perform the out-of-scope task.
+
 ## Inputs to gather
 
 Before starting the analysis, make sure you have:
@@ -29,6 +44,25 @@ Before starting the analysis, make sure you have:
 5. **Procedural context** (optional). Examination, opposition, pre-filing review, or freedom-to-operate. Note the context if the user provides it.
 
 If the description is missing, ask once before proceeding. Do not run a sufficiency assessment on claims alone.
+
+### Input formats
+
+Inputs may arrive in any of these forms — handle each gracefully:
+
+- **Inline text in the command invocation**: e.g., the user types claim and description directly after the command name. Parse what's there.
+- **Attached files**: PDF, DOCX, TXT. Read them to extract claim and description text. Use the appropriate file-reading approach for the format.
+- **Pasted text in a follow-up message**: if the bare command was invoked, prompt the user to paste or attach the inputs.
+- **Mixed**: e.g., claim inline, description as attachment. Combine.
+
+### Prompts for missing inputs
+
+If anything required is missing, ask the user concisely. Do not guess and do not invent description content. Sample prompts:
+
+- *"To run the sufficiency assessment I need: (i) the claim(s) to be assessed, and (ii) the description of the application as filed. You provided [X]. Could you supply [Y]?"*
+- *"You provided multiple claims. Which claim(s) should I assess? Default is all independent claims if you have no preference."*
+- *"You provided the claims but not the description. Sufficiency cannot be assessed from the claims alone — please paste the description or attach the application."*
+
+Ask only for what is genuinely missing.
 
 ## The legal standard (apply strictly)
 
@@ -164,6 +198,16 @@ Avoid hedging language ("arguably", "one might think") — the severity column c
 - **Range claims**: enablement must extend across the entire range. Examples at the extremes may be needed if the technical effect varies across the range.
 - **Claims to "use of X for Y"**: sufficiency requires that the use can be performed, i.e., that X actually achieves Y as claimed.
 
+## Error handling
+
+- **No inputs at all**: ask the user to provide the claim and description, with an example of how to invoke the skill.
+- **Claims provided but no description**: ask for the description. Do not proceed without it — sufficiency cannot be assessed on claims alone.
+- **Description provided but no claim**: ask for the claim(s).
+- **Description in a foreign language**: proceed (the skill handles this); cite passages by paragraph or page/line number, optionally provide brief English glosses.
+- **No working examples in the description**: proceed; this alone is not fatal but feeds into the analysis. The skill handles severity calibration.
+- **Application text very long**: focus on the parts relevant to enablement of each claim feature; cite the rest by reference rather than reproducing.
+- **Multiple claim sets / multiple applications provided**: ask which application and which claim set to use; do not run multiple analyses without confirmation.
+
 ## Self-check: am I doing sufficiency, or something else?
 
 If you find yourself writing any of the following, stop — you have drifted out of Art. 83:
@@ -175,3 +219,10 @@ If you find yourself writing any of the following, stop — you have drifted out
 - "the invention has no industrial application" — that's Art. 57, not Art. 83.
 
 Sufficiency is about whether the skilled person can *carry out* the invention across the whole scope of the claim, using the application + CGK, without undue burden. If you are reasoning about prior art, claim breadth in the abstract, or whether a feature is supported, you have drifted out of scope.
+
+## Notes for the assistant
+
+- Do not narrate this skill file to the user. Just do the work.
+- Follow the skill's tone strictly: formal patent-attorney English, no hedging, no executive summary.
+- For suggested fixes: only propose restrictions to subject-matter actually supported by the description, with citation. Where no such restriction is available, say so explicitly and note the Art. 123(2) caveat. Do not invent supporting disclosure.
+- If after delivery the user asks substantive follow-up questions about the sufficiency assessment itself (e.g., "why did you treat the broad parameter range as a whole-scope issue?"), answer them — that is part of the same scope. Only refuse extensions to other patentability requirements.

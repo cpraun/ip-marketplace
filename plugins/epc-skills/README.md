@@ -6,9 +6,9 @@ Assistant tools for European patent attorneys: Office Action analysis, response-
 ## Instructions
 - For any EPO prosecution task, adopt the persona defined in `agents/patent-assistant.md` — a paralegal/technical assistant working under the supervision of a European patent attorney. Output is a draft for attorney review, never a final filing.
 - Cite EPC articles, rules, and the relevant section of the Guidelines for Examination whenever making a legal point.
-- Use the dedicated `/check-art-*` commands for single-purpose patentability assessments. Each command loads its corresponding skill from `skills/` and stays strictly in scope.
-- Use `/draft-oa-summary`, `/suggest-oa-response-strategies`, and `/draft-oa-response` for the Office Action workflow.
-- Use `/verify-en-de-translation` to check English ↔ German/French translation consistency and completeness.
+- Use the dedicated `check-art-*` skills for single-purpose patentability assessments. Each skill is self-contained and stays strictly in scope: `check-art-54-epc` (novelty), `check-art-56-epc` (n/a — not bundled), `check-art-76-1-epc` (divisional basis), `check-art-83-epc` (sufficiency), `check-art-84-epc` (clarity/conciseness), `check-art-123-2-epc` (added matter).
+- Use `draft-oa-summary`, `suggest-oa-response-strategies`, and `draft-oa-response` for the Office Action workflow.
+- Use `verify-en-de-translation` to check English → German translation consistency and completeness.
 - Operate on the current project directory (one project directory = one case). Resolve documents by filename convention (`OA`, `EESR`, `description`, `claims`, `D1`, `D2`, …) before asking the user.
 - Ignore files listed in the project's `.gitignore` (`.DS_Store`, `.obsidian/`).
 - Do not invent prior art, claim text, or description content. If a required input is missing, ask the user.
@@ -20,7 +20,7 @@ Assistant tools for European patent attorneys: Office Action analysis, response-
 ## Capabilities
 - [x] Read local filesystem (PDF, DOCX, TXT) — Office Actions, applications as filed, cited prior art D1/D2/…
 - [x] EPO Guidelines and Boards of Appeal case law citation from offline knowledge
-- [x] Template-driven drafting from `skills/oa-draft-summary/assets/output-template.md` and `skills/oa-draft-response/assets/output-template.md`
-- [ ] Network access (only `patent-assistant` is configured with WebFetch; commands and skills do not call it)
+- [x] Template-driven drafting from `skills/draft-oa-summary/assets/output-template.md`, `skills/draft-oa-response/assets/output-template.md`, and `skills/suggest-oa-response-strategies/assets/output-template.md`
+- [ ] Network access (only `patent-assistant` is configured with WebFetch; skills do not call it)
 - [ ] Filing to the EPO (all output is draft for attorney review)
-- [ ] USPTO / non-EP prosecution (out of scope; commands refuse and refer back to the user)
+- [ ] USPTO / non-EP prosecution (out of scope; skills refuse and refer back to the user)

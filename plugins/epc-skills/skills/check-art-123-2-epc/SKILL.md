@@ -1,5 +1,5 @@
 ---
-name: art-123-2-epc-added-matter
+name: check-art-123-2-epc
 description: Analyse patent claim text or individual claim features for compliance with Article 123(2) EPC (the "Gold Standard" of directly and unambiguously disclosed subject-matter). Use this skill whenever the user submits a patent claim, a claim amendment, or an isolated claim feature and asks whether it introduces added subject-matter, passes the Art. 123(2) test, meets the directly-and-unambiguously requirement, or is otherwise admissible under the Gold Standard practised at the EPO. Trigger even when the request is phrased informally, e.g. "does this feature have a basis?", "can I amend the claim like this?", "is this a 123(2) problem?", "check for added matter", "Zwischenverallgemeinerung?", "does the selection violate 123(2)?". Always use this skill for any Art. 123(2) / added-matter analysis task.
 version: "1.0"
 ---
@@ -12,6 +12,20 @@ Apply the EPO Gold Standard to determine whether an amended claim or an isolated
 
 The skill produces a structured legal assessment that a European patent attorney can use directly in prosecution, opposition, or appeal proceedings.
 
+## What this skill does NOT do
+
+This skill is **single-purpose**. It performs added-matter assessment under Art. 123(2) EPC and nothing else. If, while running the analysis or in follow-up, the user asks for any of the following, do NOT silently extend scope. Instead, deliver the Art. 123(2) assessment first, then state clearly that the request is outside this skill's scope:
+
+- **Clarity (Art. 84)** — out of scope. Use `/check-art-84-epc`.
+- **Sufficiency (Art. 83)** — out of scope. Use `/check-art-83-epc`.
+- **Novelty (Art. 54)** — out of scope. Use `/check-art-54-epc`.
+- **Inventive step (Art. 56)** — out of scope.
+- **Divisional basis (Art. 76(1))** — adjacent test (same Gold Standard, different basis = parent's content). Out of scope. Use `/check-art-76-1-epc`.
+- **Art. 123(3) EPC (extension of protection after grant)** — adjacent but distinct. The skill flags Art. 123(2)/(3) "inescapable trap" interactions where relevant, but a full Art. 123(3) analysis is out of scope.
+- **Drafting amendments beyond the straightforward fall-back reformulations the skill produces** — out of scope.
+- **National-court or UPC standards** — the skill applies strict EPO practice. National validation issues are out of scope.
+
+For each out-of-scope request, the response is a single sentence: *"That is outside the scope of /check-art-123-2-epc. To do [X], please use [the appropriate other command/skill] or run a separate request."* Do not silently perform the out-of-scope task.
 
 ## Background
 
@@ -32,6 +46,36 @@ Key attributes of the Gold Standard:
 - **Disclosure basis.** The basis is the totality of the originally filed application: description, claims, and drawings. The abstract is excluded. Priority documents are not themselves a basis (they may inform context but cannot supply missing disclosure).
 - **Implicit disclosure.** Subject-matter that is not stated explicitly but necessarily and directly follows from the explicit content is also disclosed (T 823/96, T 860/00). Speculative or merely probable implications are not sufficient.
 - **No "inescapable pointer" shortcut.** The Gold Standard cannot be relaxed to a test of whether the application contained a pointer toward the amendment (G 2/10, point 4.5.1).
+
+## Inputs to gather
+
+Before starting the analysis, make sure you have:
+
+- **Claim, amendment, or feature under examination**: the exact text being assessed. Required. If the input contains an `@filename` reference at the start, the claim/feature is the text that follows it.
+- **Application as originally filed**: the description, claims, and drawings of the application as filed. Required for a definitive assessment. Sources, in order of preference:
+  1. A document referenced via `@filename` in the user's input.
+  2. The application document most recently shared or uploaded in the current conversation.
+  3. A file in the current project directory matching `description`, `claims`, or `application` (case-insensitive).
+- **Surrounding claim context** (optional): if only an isolated feature is provided, the broader claim text helps the analysis. Ask only if it materially affects the finding.
+
+### Input formats
+
+Inputs may arrive in any of these forms — handle each gracefully:
+
+- **Inline text in the command invocation**: e.g., the user types the feature and a `@filename` reference. Parse what's there.
+- **Attached files**: PDF, DOCX, TXT. Read them to extract the relevant text. Use the appropriate file-reading approach for the format.
+- **Pasted text in a follow-up message**: if the bare command was invoked, prompt the user to paste or attach the inputs.
+- **Mixed**: e.g., amendment inline, original disclosure as attachment. Combine.
+
+### Prompts for missing inputs
+
+If anything required is missing or ambiguous, ask the user concisely. Do not guess and do not invent original disclosure. Sample prompts:
+
+- *"To run the Art. 123(2) assessment I need: (i) the claim, amendment, or feature under examination, and (ii) the application as originally filed. You provided [X]. Could you supply [Y]?"*
+- *"You provided the amendment but not the original disclosure. Without it, the analysis can only be provisional — please paste the relevant passages or attach the application."*
+- *"It is unclear which part of your input is the amendment and which is the original. Could you separate them?"*
+
+Ask only for what is genuinely missing.
 
 ---
 
@@ -201,12 +245,32 @@ Structure the assessment as follows:
 
 ---
 
+## Error handling
+
+- **No inputs at all**: ask the user to provide the claim/feature and the application as originally filed, with an example of how to invoke the skill.
+- **Amendment provided but no original disclosure**: proceed only as far as a provisional analysis; state explicitly what passages of the original disclosure are needed to complete it.
+- **Original disclosure provided but no amendment**: ask for the claim/feature under examination.
+- **`@filename` reference does not resolve to a readable file**: report the failure and ask the user to provide the file by another means. Do not search the web.
+- **Ambiguous input** (unclear which part is the amendment and which is the original): ask one focused clarifying question before proceeding.
+- **Foreign-language original disclosure**: proceed (the skill handles this); cite passages by paragraph or page/line number, optionally provide brief English glosses.
+- **Multiple amendments in one request**: ask whether to assess them jointly or separately; do not silently merge.
+
 ## Important Caveats to Communicate to the User
 
 1. **Original disclosure is indispensable.** No Art. 123(2) assessment is definitive without the full text of the application as originally filed. If the user has not provided it, ask for it or make explicit that the analysis is provisional.
-    
+
 2. **Art. 123(3) EPC interaction.** Amendments that potentially comply with Art. 123(2) EPC may still violate Art. 123(3) EPC (no extension of the scope of protection of the granted patent). In opposition/appeal proceedings, both provisions must be checked simultaneously. The "inescapable trap" (Art. 123(2)/(3) squeeze) should be flagged where relevant.
-    
+
 3. **National courts.** While this assessment follows EPO practice, national patent courts within EPC contracting states may apply related but not identical standards. The analysis here applies strictly to EPO proceedings.
-    
+
 4. **This is legal analysis, not legal advice.** The output is an analytical tool for a qualified European patent attorney. It does not constitute legal advice and does not replace the professional judgment of the responsible representative.
+
+## Notes for the assistant
+
+- Do not narrate this skill file to the user. Just do the work.
+- Follow the skill's tone strictly: formal patent-attorney English, no hedging, no executive summary.
+- The Gold Standard is a standard of derivability, not novelty. Do not substitute a novelty test.
+- If the amendment type is an **intermediate generalisation (Zwischenverallgemeinerung)**, flag it explicitly and apply the functional-inseparability test.
+- If the amendment is a **disclaimer**, branch between G 2/10 (disclosed disclaimer) and G 1/03 / G 2/03 (undisclosed disclaimer) and apply the correct test.
+- Flag any potential **Art. 123(3) EPC** interaction (protection-scope extension) if relevant, but do not perform a full Art. 123(3) analysis.
+- If after delivery the user asks substantive follow-up questions about the Art. 123(2) assessment itself (e.g., "why did you classify this as an intermediate generalisation?"), answer them — that is part of the same scope. Only refuse extensions to other patentability requirements.
